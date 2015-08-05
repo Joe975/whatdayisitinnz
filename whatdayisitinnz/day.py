@@ -3,7 +3,7 @@ Created on Jul 12, 2015
 
 @author: hashtonmartyn
 '''
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from pytz import timezone
 NZ_TIME_ZONE = timezone("Pacific/Auckland")
 
@@ -34,32 +34,49 @@ class Day(object):
         The URL for the day eg "christmasday"
         """
         return self._URL
+
+    @property
+    def offset(self):
+        """
+        How many days until this day eg '3'
+        """
+        return self._offset
     
-    def is_today(self, current_datetime):
-        raise NotImplementedError("You must implement this in your child class")
+    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
+        """
+        Return True if today is this day, False if not
+        """
+        the_days_date = self.is_date(current_datetime)
+        return self.calculate_offset(the_days_date, current_datetime) == 0
     
-    def _the_nth_day_in_the_month(self, n, iso_day, month, current_datetime):
+    def calculate_offset(self, the_days_date, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
+        """
+        Calculates and returns number of days until the day will next occur
+        """
+        self._offset = (the_days_date - current_datetime.date()).days
+        if self._offset < 0:
+            the_days_date = self.is_date(current_datetime.date()+timedelta(days=365))
+            self._offset = (the_days_date - current_datetime.date()).days
+        return self._offset
+
+    def _nth_day_in_the_month(self, n, iso_day, month, current_datetime):
         """
         For use when a day is the xth y in the month. Eg Labour Day is the 4th Monday of
         October.
         
         :param n: eg for Labour Day n would be 4
-        :param iso_day: they day of the week from 1-7 where Monday is 1 and Sunday is 7
+        :param iso_day: the day of the week from 1-7 where Monday is 1 and Sunday is 7
         :param month: month of the year from 1-12 where 1 is January and 12 is December
-        :return: True if the current_datetime is the nth day in the month and False if not
+        :return: Datetime of the requested day
         """
-        if current_datetime.month == month:
-            date_calc = datetime(current_datetime.year,
-                                 current_datetime.month,
-                                 1)
-            
-            first_occurence = (iso_day - date_calc.isoweekday())
-            if iso_day < date_calc.isoweekday():
-                first_occurence += 7                
-            date_calc_sunday_delta = first_occurence  + ((n - 1) * 7)
-            if current_datetime.day == date_calc.day + date_calc_sunday_delta:
-                return True
-        return False
+        date_in_month = date(year=current_datetime.year, month=month, day=1)
+        nth_day = 0
+        while True:
+            if date_in_month.isoweekday() == iso_day:
+                nth_day += 1
+                if nth_day == n: return date_in_month
+            date_in_month += timedelta(days=1)
+
     
 class MothersDay(Day):
     """
@@ -70,8 +87,8 @@ class MothersDay(Day):
         super(MothersDay, self).__init__("/{0}".format(self.__class__.__name__.lower()),
                                          "Mother's Day")
     
-    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
-        return self._the_nth_day_in_the_month(2, 7, 5, current_datetime)
+    def is_date(self, current_datetime):
+        return self._nth_day_in_the_month(2, 7, 5, current_datetime)
     
 class Christmas(Day):
     """
@@ -82,8 +99,9 @@ class Christmas(Day):
         super(Christmas, self).__init__("/{0}".format(self.__class__.__name__.lower()),
                                          "Christmas Day")
     
-    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
-        return current_datetime.month == 12 and current_datetime.day == 25
+    def is_date(self, current_datetime):
+        return date(year=current_datetime.year, month=12, day=25)
+
     
 class Today(Day):
     """
@@ -110,9 +128,10 @@ class WaitangiDay(Day):
         super(WaitangiDay, self).__init__("/{0}".format(self.__class__.__name__.lower()),
                                           "Waitangi Day")
         
-    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
-        return current_datetime.month == 2 and current_datetime.day == 6
-    
+    def is_date(self, current_datetime):
+        return date(year=current_datetime.year, month=2, day=6)
+
+
 class FathersDay(Day):
     """
     Happens on the first Sunday of September
@@ -121,22 +140,25 @@ class FathersDay(Day):
     def __init__(self):
         super(FathersDay, self).__init__("/{0}".format(self.__class__.__name__.lower()),
                                          "Father's Day")
-    
-    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
-        return self._the_nth_day_in_the_month(1, 7, 9, current_datetime)
-    
+
+    def is_date(self, current_datetime):
+        return self._nth_day_in_the_month(1, 7, 9, current_datetime)
+
+
 class LabourDay(Day):
     """
-    Happens on October 26th
+    Happens on fourth Monday of October
     """
     
     def __init__(self):
         super(LabourDay, self).__init__("/{0}".format(self.__class__.__name__.lower()),
                                          "Labour Day")
         
-    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
-        return self._the_nth_day_in_the_month(4, 1, 10, current_datetime)
-    
+    def is_date(self, current_datetime):
+        return self._nth_day_in_the_month(4, 1, 10, current_datetime)
+
+
+
 class QueensBirthday(Day):
     """
     Happens on the first Monday of June
@@ -146,9 +168,10 @@ class QueensBirthday(Day):
         super(QueensBirthday, self).__init__("/{0}".format(self.__class__.__name__.lower()),
                                          "Queen's Birthday")
         
-    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
-        return self._the_nth_day_in_the_month(1, 1, 6, current_datetime)
-    
+    def is_date(self, current_datetime):
+        return self._nth_day_in_the_month(1, 1, 6, current_datetime)
+
+
 class NewYearsDay(Day):
     """
     1st of the 1st
@@ -157,10 +180,10 @@ class NewYearsDay(Day):
         super(NewYearsDay, self).__init__("/{0}".format(self.__class__.__name__.lower()),
                                          "New Year's Day")
         
-    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
-        return current_datetime.month == 1 and current_datetime.day == 1
+    def is_date(self, current_datetime):
+        return date(year=current_datetime.year, month=1, day=1)
     
-    
+
 MOTHERS_DAY = MothersDay()
 CHRISTMAS = Christmas()
 TODAY = Today()

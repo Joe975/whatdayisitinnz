@@ -22,10 +22,7 @@ class TestDay(unittest.TestCase):
     @raises(AttributeError)
     def test_name_can_not_change(self):
         self.day.name = "someothername"
-        
-    @raises(NotImplementedError)
-    def test_is_it_this_day_raises_NotImplemented(self):
-        self.day.is_today(datetime.now())
+
         
 class TestSpecificDayBase(unittest.TestCase):
     
@@ -33,6 +30,7 @@ class TestSpecificDayBase(unittest.TestCase):
         self.NZ_time = timezone("Pacific/Auckland") 
         self.sample_positive_days = []
         self.sample_negative_days = []
+        self.offset_days = []
         
     def test_sample_negative_days_return_false(self):
         for sample_day in self.sample_negative_days:
@@ -41,6 +39,13 @@ class TestSpecificDayBase(unittest.TestCase):
     def test_sample_positive_days_return_true(self):
         for  sample_day in self.sample_positive_days:
             self.assertTrue(self.day.is_today(sample_day), sample_day)
+
+    def test_offset_calculation(self):
+        for sample_day in self.offset_days:
+            day_date = self.day.is_date(sample_day["day"])
+            self.assertEqual(self.day.calculate_offset(day_date, sample_day["day"]),
+                             sample_day["offset"])
+
         
 class TestMothersDay(TestSpecificDayBase):
     
@@ -61,6 +66,11 @@ class TestMothersDay(TestSpecificDayBase):
                                      datetime(1990, 5, 14, tzinfo=self.NZ_time),
                                      datetime(1990, 5, 6, tzinfo=self.NZ_time),
                                      datetime(2015, 5, 2, tzinfo=self.NZ_time))
+
+        self.offset_days = ({"day":datetime(2015, 5, 2, tzinfo=self.NZ_time), "offset":8},
+                            {"day":datetime(2015, 5, 15, tzinfo=self.NZ_time), "offset":359},
+                            {"day":datetime(2015, 5, 10, tzinfo=self.NZ_time), "offset":0})
+
             
 class TestChristmas(TestSpecificDayBase):
     
@@ -77,6 +87,11 @@ class TestChristmas(TestSpecificDayBase):
         self.sample_negative_days = (datetime(1990, 12, 26, tzinfo=self.NZ_time),
                                      datetime(1990, 12, 24, tzinfo=self.NZ_time),
                                      datetime(1990, 11, 25, tzinfo=self.NZ_time))
+
+        self.offset_days = ({"day":datetime(2000, 12, 15, tzinfo=self.NZ_time), "offset":10},
+                            {"day":datetime(2014, 12, 28, tzinfo=self.NZ_time), "offset":362},
+                            {"day":datetime(1995, 12, 25, tzinfo=self.NZ_time), "offset":0})
+
         
 class TestToday(TestSpecificDayBase):
     
@@ -98,7 +113,12 @@ class TestWaitangiDay(TestSpecificDayBase):
         self.sample_negative_days = (datetime(2016, 2, 7, tzinfo=self.NZ_time),
                                      datetime(2016, 2, 5, tzinfo=self.NZ_time),
                                      datetime(2016, 1, 6, tzinfo=self.NZ_time))
-        
+
+        self.offset_days = ({"day":datetime(1999, 2, 1, tzinfo=self.NZ_time), "offset":5},
+                            {"day":datetime(2000, 3, 10, tzinfo=self.NZ_time), "offset":333},
+                            {"day":datetime(2015, 2, 6, tzinfo=self.NZ_time), "offset":0})
+
+
 class TestFathersDay(TestSpecificDayBase):
     
     def setUp(self):
@@ -118,8 +138,12 @@ class TestFathersDay(TestSpecificDayBase):
                                      datetime(1990, 9, 3, tzinfo=self.NZ_time),
                                      datetime(1990, 9, 6, tzinfo=self.NZ_time),
                                      datetime(2015, 9, 2, tzinfo=self.NZ_time))
-        
-        
+
+        self.offset_days = ({"day":datetime(1999, 2, 1, tzinfo=self.NZ_time), "offset":216},
+                            {"day":datetime(2000, 3, 10, tzinfo=self.NZ_time), "offset":177},
+                            {"day":datetime(2015, 9, 6, tzinfo=self.NZ_time), "offset":0})
+
+
 class TestLabourDay(TestSpecificDayBase):
     
     def setUp(self):
@@ -138,7 +162,12 @@ class TestLabourDay(TestSpecificDayBase):
                                      datetime(1990, 9, 3, tzinfo=self.NZ_time),
                                      datetime(1990, 9, 6, tzinfo=self.NZ_time),
                                      datetime(2015, 9, 2, tzinfo=self.NZ_time))
-        
+
+        self.offset_days = ({"day":datetime(1999, 2, 1, tzinfo=self.NZ_time), "offset":266},
+                            {"day":datetime(2000, 11, 10, tzinfo=self.NZ_time), "offset":346},
+                            {"day":datetime(2015, 10, 26, tzinfo=self.NZ_time), "offset":0})
+
+
 class TestQueensBirthday(TestSpecificDayBase):
     
     def setUp(self):
@@ -153,7 +182,12 @@ class TestQueensBirthday(TestSpecificDayBase):
         self.sample_negative_days = (datetime(1990, 6, 3, tzinfo=self.NZ_time),
                                      datetime(1990, 6, 5, tzinfo=self.NZ_time),
                                      datetime(1990, 5, 4, tzinfo=self.NZ_time),)
-        
+
+        self.offset_days = ({"day":datetime(1991, 2, 1, tzinfo=self.NZ_time), "offset":122},
+                            {"day":datetime(1999, 11, 10, tzinfo=self.NZ_time), "offset":208},
+                            {"day":datetime(2015, 6, 1, tzinfo=self.NZ_time), "offset":0})
+
+
 class TestNewYearsDay(TestSpecificDayBase):
     
     def setUp(self):
@@ -168,6 +202,10 @@ class TestNewYearsDay(TestSpecificDayBase):
                                      datetime(2016, 2, 1, tzinfo=self.NZ_time),
                                      datetime(2015, 12, 31, tzinfo=self.NZ_time))
         
+        self.offset_days = ({"day":datetime(1999, 12, 25, tzinfo=self.NZ_time), "offset":7},
+                            {"day":datetime(2000, 2, 10, tzinfo=self.NZ_time), "offset":326},
+                            {"day":datetime(2015, 1, 1, tzinfo=self.NZ_time), "offset":0})
+
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

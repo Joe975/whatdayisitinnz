@@ -6,7 +6,7 @@
 			{% if day.is_today() %}
 				<div class="dayRow row bg-success"><h3 class="dayRowText">It is {{ day.name }}</h3></div>
 			{% else %}
-				<div class="dayRow row bg-danger"><h3 class="dayRowText">It isn't {{ day.name }}</h3></div>
+				<div class="dayRow row bg-danger"><h3 class="dayRowText">It isn't {{ day.name }} for another {{ day.offset }} days</h3></div>
 			{% endif %}
 		{% endfor %}
 	</div>
