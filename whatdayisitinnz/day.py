@@ -20,6 +20,7 @@ class Day(object):
         """
         self._URL = URL
         self._name = name
+        self._offset = 0
         
     @property
     def name(self):
@@ -41,6 +42,13 @@ class Day(object):
         How many days until this day eg '3'
         """
         return self._offset
+
+    @property
+    def date(self):
+        """
+        Date for the next occurrence of this day
+        """
+        return self._date
     
     def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
         """
@@ -52,11 +60,17 @@ class Day(object):
     def calculate_offset(self, the_days_date, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
         """
         Calculates and returns number of days until the day will next occur
+        Handles dates that have already occurred in the current year and rolls the date forward
+                
+        :param the_days_date: date object for the day in question
+        :param current_datetime: the date right now
+        :return: Offset in days
         """
         self._offset = (the_days_date - current_datetime.date()).days
         if self._offset < 0:
             the_days_date = self.is_date(current_datetime.date()+timedelta(days=365))
             self._offset = (the_days_date - current_datetime.date()).days
+        self._date = the_days_date
         return self._offset
 
     def _nth_day_in_the_month(self, n, iso_day, month, current_datetime):
@@ -69,6 +83,7 @@ class Day(object):
         :param month: month of the year from 1-12 where 1 is January and 12 is December
         :return: Datetime of the requested day
         """
+        assert(n > 0)
         date_in_month = date(year=current_datetime.year, month=month, day=1)
         nth_day = 0
         while True:
@@ -112,8 +127,10 @@ class Today(Day):
         super(Today, self).__init__("/{0}".format(self.__class__.__name__.lower()),
                                          "Today")
     
-    def is_today(self, current_datetime=datetime.now(tz=NZ_TIME_ZONE)):
-        return True
+    def is_date(self, current_datetime):
+        return date(year=current_datetime.year,
+                    month=current_datetime.month,
+                    day=current_datetime.day)
     
     @property
     def name(self):
@@ -193,11 +210,23 @@ LABOUR_DAY = LabourDay()
 QUEENS_BIRTHDAY = QueensBirthday()
 NEW_YEARS_DAY = NewYearsDay()
 
-DAYS = (TODAY,
+def days():
+    """
+    Calculates and sorts days by time until they occur
+    
+    :returns: sorted list of days
+    """
+    ds = [TODAY,
         MOTHERS_DAY,
         FATHERS_DAY,
         WAITANGI_DAY,
         CHRISTMAS,
         LABOUR_DAY,
         QUEENS_BIRTHDAY,
-        NEW_YEARS_DAY)    
+        NEW_YEARS_DAY]
+    for day in ds:
+        day.is_today()
+    ds.sort(key = lambda day: day.offset)
+    return ds
+
+DAYS = days()

@@ -98,7 +98,9 @@ class TestToday(TestSpecificDayBase):
     def setUp(self):
         super(TestToday, self).setUp()
         self.day = TODAY
-        self.sample_positive_days = (datetime.now(tz=self.NZ_time),)
+        now = datetime.now(tz=self.NZ_time)
+        self.sample_positive_days = (now,)
+        self.offset_days = ({"day":datetime(year=now.year, month=now.month, day=now.day, tzinfo=self.NZ_time), "offset":0},)
         
 class TestWaitangiDay(TestSpecificDayBase):
     

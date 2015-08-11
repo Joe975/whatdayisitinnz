@@ -1,12 +1,25 @@
 {% extends "base.html" %}
+{% macro display_day(day, color) %}
+	<div class="btn-group">
+		<button type="button" class="btn {{ color }} dropdown-toggle" data-toggle="dropdown"><h3 class="dayRowText text-left">It isn't {{ day.name }}</h3>
+		</button>
+		<ul class="dropdown-menu">
+			<li><h3 class="dayTable text-left">{{ day.name }} is {{ day.date }}, {{ day.offset }} days away</h3></li>
+		</ul>
+	</div>
+{% endmacro %}
 {% block title %}Index{% endblock %}
 {% block content %}
-	<div class="container dayTable">
+	<div class="btn-group-vertical center-block" role="group">
 		{% for day in days %}
 			{% if day.is_today() %}
-				<div class="dayRow row bg-success"><h3 class="dayRowText">It is {{ day.name }}</h3></div>
+				<button type="button" class="btn btn-primary"><h3 class="dayRowText text-left">It is {{ day.name }}</h3></button>
+			{% elif day.offset < 8 %}
+				{{ display_day(day, "btn-danger") }}
+			{% elif day.offset < 32 %}
+				{{ display_day(day, "btn-warning") }}
 			{% else %}
-				<div class="dayRow row bg-danger"><h3 class="dayRowText">It isn't {{ day.name }} for another {{ day.offset }} days</h3></div>
+				{{ display_day(day, "btn-success") }}
 			{% endif %}
 		{% endfor %}
 	</div>
